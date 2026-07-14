@@ -12,15 +12,14 @@ titleTemplate: '%s - Xiao Han'
 
 <!-- transition: slide-up -->
 
-## Monitoring upgrades for the JUNO DCI system
+## Monitoring upgrades for the JUNO DCI
 
-**Xiao Han** <a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
+**Xiao Han** on behalf DCI Group <a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
 
-28th JUNO Collaboration Meeting · **20 July 2026 · Beijing, IHEP**
+<a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-open-in-new />28th JUNO Collaboration Meeting</a>
+ · **20 July 2026 · Beijing IHEP**
 
-<a href="https://dci-grafana.ihep.ac.cn/"><mdi-open-in-new />DCI Grafana</a>
-
-<a href="https://github.com/hanx-hep/27th-junocm-dci" class="ns-c-iconlink"><mdi-open-in-new />Previous collaboration-meeting report</a>
+<a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-open-in-new />Github</a> <a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-open-in-new />DCI Grafana</a> <a href="https://hanx-hep.github.io/28th-junocm-dci/" class="ns-c-iconlink"><mdi-open-in-new />Previous collaboration-meeting report</a>
 
 ---
 layout: side-title
@@ -46,7 +45,7 @@ layout: section
 color: cyan-light
 ---
 
-# From backup to dashboard provisioning
+## From backup to dashboard provisioning
 
 ---
 layout: top-title-two-cols
@@ -56,7 +55,7 @@ align: c-l-l
 
 :: title ::
 
-# Grafana monitoring has moved to dashboard provisioning
+# Grafana has moved to dashboard provisioning
 
 :: left ::
 
@@ -144,7 +143,7 @@ align: c
 
 :: content ::
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.7}
 flowchart LR
     A[Grafana UI / AI Agent] --> B[Dashboard JSON]
     B --> C[Git review and history]
@@ -230,21 +229,22 @@ align: c
 
 :: content ::
 
-<div style="width: 100%; height: 45vh; overflow: hidden;">
+<div style="width: 100%; height: 40vh; overflow: hidden;">
   <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&refresh=1m&kiosk"
-    style="width: 200%; height: 90vh; transform: scale(0.5); transform-origin: 0 0; border: 0;"
+    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-2d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"
+    style="width: 250%; height: 100vh; transform: scale(0.4); transform-origin: 0 0; border: 0;"
   ></iframe>
 </div>
 
-<div class="text-center text-sm text-gray-500">The embedded view is live and may require access to dci-grafana.ihep.ac.cn.</div>
-
+<div class="text-center">
+<a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new />Open the live TPC transfer matrix</a>
+</div>
 ---
 layout: section
 color: lime-light
 ---
 
-# Grafana through the IHEP MCP system
+## Grafana through the IHEP MCP system
 
 ---
 layout: top-title
@@ -258,7 +258,10 @@ align: c
 
 :: content ::
 
-```mermaid {scale: 0.42}
+The centralized server is the controlled entry point. It authenticates the request, forwards the authorized MCP call to `mcp-grafana`, and keeps the Grafana service behind the gateway boundary.
+
+
+```mermaid {scale: 0.5}
 flowchart LR
     A[AI Agent or MCP client] -->|MCP JSON-RPC| B[mcp.ihep.ac.cn<br/>centralized mcp-server]
     B -->|authentication and authorization| C[Auth service]
@@ -269,7 +272,6 @@ flowchart LR
     G --> D
 ```
 
-The centralized server is the controlled entry point. It authenticates the request, forwards the authorized MCP call to `mcp-grafana`, and keeps the Grafana service behind the gateway boundary.
 
 ---
 layout: top-title-two-cols
@@ -380,14 +382,15 @@ Variables allow filtering by **Category**, **Name**, and **Level**.
 
 :: right ::
 
-<a href="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all"><mdi-open-in-new />Open the live Component Logs dashboard</a>
 
-<div style="width: 100%; height: 30vh; overflow: hidden; margin-top: 1rem;">
+<div style="width: 100%; height: 35vh; overflow: hidden; margin-top: 1rem;">
   <iframe
     src="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"
-    style="width: 200%; height: 60vh; transform: scale(0.5); transform-origin: 0 0; border: 0;"
+    style="width: 200%; height: 70vh; transform: scale(0.5); transform-origin: 0 0; border: 0;"
   ></iframe>
 </div>
+
+<a href="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all"><mdi-open-in-new />Open the live Component Logs dashboard</a>
 
 ---
 layout: top-title-two-cols
