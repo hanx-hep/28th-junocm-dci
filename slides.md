@@ -5,6 +5,7 @@ layout: cover
 routerMode: hash
 theme: neversink
 lineNumbers: true
+favicon: /images/juno_logo_transparent.png
 title: Monitoring upgrades for the JUNO DCI system
 titleTemplate: '%s - Xiao Han'
 ---
@@ -15,7 +16,7 @@ titleTemplate: '%s - Xiao Han'
 
 **Xiao Han** <a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
 
-28th JUNO Collaboration Meeting · **[date to be confirmed]**
+28th JUNO Collaboration Meeting · **20 July 2026 · Beijing, IHEP**
 
 <a href="https://dci-grafana.ihep.ac.cn/"><mdi-open-in-new />DCI Grafana</a>
 
@@ -34,8 +35,8 @@ align: cm-lm
 
 :: content ::
 
-- *From backup to configuration as code*
-- *Dashboard configuration as code*
+- *From backup to dashboard provisioning*
+- *Dashboard provisioning in practice*
 - *MCP access to Grafana*
 - *Centralized DIRAC component logs*
 - *Summary and next steps*
@@ -45,7 +46,7 @@ layout: section
 color: cyan-light
 ---
 
-# From backup to configuration as code
+# From backup to dashboard provisioning
 
 ---
 layout: top-title-two-cols
@@ -55,23 +56,81 @@ align: c-l-l
 
 :: title ::
 
-# Grafana monitoring has become reproducible
+# Grafana monitoring has moved to dashboard provisioning
 
 :: left ::
 
 ## Previous workflow
 
-Grafana was primarily used as a live service. The repository preserved the basic deployment configuration, while most dashboard definitions remained inside the Grafana instance.
+```mermaid {scale: 0.55}
+flowchart TD
+    A[Grafana instance] --> B[Dashboard edited in UI]
+    B --> C[State stored in Grafana]
+    C --> D[Manual backup when needed]
+```
 
-This made changes harder to review, reproduce, and transfer between environments.
+Dashboard definitions were mainly kept inside the running Grafana service. Changes were harder to review, reproduce, and transfer.
 
 :: right ::
 
 ## Current workflow
 
-Dashboard definitions are exported as JSON and provisioned from the repository. The repository now covers Admin, DIRAC, TPC, User, and Shift dashboards.
+```mermaid {scale: 0.55}
+flowchart TD
+    A[Dashboard JSON] --> B[Git review and history]
+    B --> C[Dashboard provisioning]
+    C --> D[Grafana instance]
+    D --> E[Repeatable deployment]
+```
 
-The latest four commits introduced dashboard provisioning, rendering support, and the TPC monitoring redesign.
+Dashboard definitions are version-controlled and loaded by Grafana provisioning providers. The same repository can reconstruct the monitoring layout.
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-l-l
+---
+
+:: title ::
+
+# Dashboard provisioning in practice
+
+:: left ::
+
+## 1. Register a provisioning provider
+
+```yaml
+# grafana/provisioning/dashboards/dashboards.yaml
+apiVersion: 1
+
+providers:
+  - name: tpc
+    orgId: 1
+    folder: TPC
+    type: file
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/tpc
+```
+
+:: right ::
+
+## 2. Mount the repository into Grafana
+
+```yaml
+# docker-compose.yml
+services:
+  grafana-server:
+    volumes:
+      - /home/docker/grafana/provisioning:
+          /etc/grafana/provisioning
+    environment:
+      - GF_RENDERING_SERVER_URL=
+          http://grafana-renderer:8081/render
+```
+
+The dashboard JSON files are then discovered from the mounted provider path and loaded by Grafana. Git changes become deployable configuration changes.
 
 ---
 layout: top-title
@@ -81,7 +140,7 @@ align: c
 
 :: title ::
 
-# Configuration-as-code workflow
+# Dashboard provisioning workflow
 
 :: content ::
 
