@@ -35,6 +35,7 @@ align: cm-lm
 :: content ::
 
 - *From backup to dashboard provisioning*
+- *Why DCI monitoring matters*
 - *Dashboard provisioning in practice*
 - *MCP access to Grafana*
 - *Centralized DIRAC component logs*
@@ -83,6 +84,32 @@ flowchart TD
 ```
 
 Dashboard definitions are version-controlled and loaded by Grafana provisioning providers. The same repository can reconstruct the monitoring layout.
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-l-l
+---
+
+:: title ::
+
+# Why DCI monitoring matters
+
+:: left ::
+
+## Monitoring supports production
+
+JUNO DCI monitoring has become an essential operational tool. During multiple production campaigns it provided a shared view of jobs, data transfers, service health, host resources, and failures across the distributed infrastructure.
+
+By making problems visible early, monitoring helped the team keep production moving and provided the evidence needed to distinguish application, service, storage, and network problems.
+
+:: right ::
+
+## Monitoring and `dci-agent`
+
+The monitoring system also gives `dci-agent`, our AI agent, a structured source of operational context. The agent can combine dashboard data, service metrics, and component logs to help locate symptoms, identify likely causes, and guide the next diagnostic step.
+
+This human–agent collaboration shortens the path from an observed failure to an actionable diagnosis, helping protect the stability and continuity of JUNO production.
 
 ---
 layout: top-title-two-cols
@@ -488,5 +515,6 @@ title: credits/people
 .mermaid > svg {
     max-width: 100%;
     height: auto;
+    margin: 0 auto;
 }
 </style>
