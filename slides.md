@@ -6,47 +6,119 @@ routerMode: hash
 theme: neversink
 lineNumbers: true
 favicon: /images/juno_logo_transparent.png
-title: Monitoring upgrades for the JUNO DCI system
+title: JUNO DCI monitoring — from dashboards to diagnosis
 titleTemplate: '%s - Xiao Han'
 ---
 
 <!-- transition: slide-up -->
 
+<img src="/images/juno_logo_transparent.png" class="absolute right-16 top-14 w-28 opacity-80" />
+
+# From dashboards to diagnosis
+
 ## Monitoring upgrades for the JUNO DCI
 
-**Xiao Han** on behalf DCI Group <a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
+**Xiao Han** on behalf of the DCI Group<br/>
+<a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
 
-<a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-open-in-new />28th JUNO Collaboration Meeting</a>
- · **20 July 2026 · Beijing IHEP**
+**28th JUNO Collaboration Meeting · 20 July 2026 · Beijing IHEP**
 
-<a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-open-in-new />Github</a> <a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-open-in-new />DCI Grafana</a> <a href="https://hanx-hep.github.io/28th-junocm-dci/" class="ns-c-iconlink"><mdi-open-in-new />Previous collaboration-meeting report</a>
+<a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-github /> Slides</a>
+ · <a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-view-dashboard-outline /> DCI Grafana</a>
+ · <a href="https://hanx-hep.github.io/27th-junocm-dci/" class="ns-c-iconlink"><mdi-history /> 27th report</a>
 
 ---
-layout: side-title
-title: Table of Contents
-color: rose-light
-align: cm-lm
+layout: top-title
+color: gray-light
+align: c
 ---
 
 :: title ::
 
-# Table of Contents
+# The upgrade is a shorter path from signal to action
 
 :: content ::
 
-- *From backup to dashboard provisioning*
-- *Why DCI monitoring matters*
-- *Dashboard provisioning in practice*
-- *MCP access to Grafana*
-- *Centralized DIRAC component logs*
-- *Summary and next steps*
+<div class="lead text-center mt-3">
+Monitoring is becoming an <strong>operational system</strong>, not only a collection of dashboards.
+</div>
+
+<div class="three-cards mt-8">
+  <div class="story-card">
+    <mdi-source-branch class="story-icon" />
+    <h2>Reproducible</h2>
+    <p>Dashboard JSON and provisioning live in Git, so changes can be reviewed and deployments reconstructed.</p>
+  </div>
+  <div class="story-card">
+    <mdi-layers-search class="story-icon" />
+    <h2>Diagnosable</h2>
+    <p>Metrics show the symptom; centralized component logs provide the event-level context behind it.</p>
+  </div>
+  <div class="story-card">
+    <mdi-robot-outline class="story-icon" />
+    <h2>Accessible</h2>
+    <p>Operators use Grafana directly; agents reach the same evidence through the controlled IHEP MCP gateway.</p>
+  </div>
+</div>
+
+<div class="takeaway mt-6">
+<strong>Goal:</strong> reduce the time between “something is wrong” and “this is the next useful action.”
+</div>
+
+---
+layout: top-title
+color: gray-light
+align: c
+---
+
+:: title ::
+
+# One monitoring loop, three upgrades
+
+:: content ::
+
+```mermaid {scale: 0.56}
+flowchart LR
+    subgraph S[Operational signals]
+        M[Service and host metrics]
+        T[TPC transfer records]
+        L[DIRAC component logs]
+    end
+
+    subgraph E[Central evidence]
+        P[(Prometheus)]
+        Q[(Elasticsearch)]
+    end
+
+    R[Dashboard JSON in Git]
+    G[DCI Grafana]
+    H[Operators]
+    C[AI agent / MCP client]
+    W[mcp.ihep.ac.cn]
+    X[mcp-grafana]
+
+    M --> P
+    T --> Q
+    L --> A[ActiveMQ] --> K[Logstash] --> Q
+    P --> G
+    Q --> G
+    R -->|provision| G
+    G -->|visual evidence| H
+    C -->|authenticated request| W --> X -->|Grafana API / render| G
+```
+
+<div class="architecture-legend">
+  <span><strong>Foundation</strong> · Git + provisioning</span>
+  <span><strong>Evidence</strong> · Prometheus + Elasticsearch</span>
+  <span><strong>Interfaces</strong> · Grafana + MCP</span>
+</div>
 
 ---
 layout: section
 color: cyan-light
 ---
 
-## From backup to dashboard provisioning
+# 1 · Make dashboards reproducible
 
 ---
 layout: top-title-two-cols
@@ -56,107 +128,37 @@ align: c-l-l
 
 :: title ::
 
-# Grafana has moved to dashboard provisioning
+# Provisioning moves the control point into Git
 
 :: left ::
 
-## Previous workflow
+## Before · instance state
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.46}
 flowchart TD
-    A[Grafana instance] --> B[Dashboard edited in UI]
-    B --> C[State stored in Grafana]
-    C --> D[Manual backup when needed]
+    A[Edit in Grafana UI] --> B[State in running instance]
+    B --> C[Manual backup]
+    C --> D[Recovery after change]
 ```
 
-Dashboard definitions were mainly kept inside the running Grafana service. Changes were harder to review, reproduce, and transfer.
+The running service was the main source of truth. A backup could recover state, but it did not make each change easy to review, reproduce, or transfer.
 
 :: right ::
 
-## Current workflow
+## Now · delivery path
 
-```mermaid {scale: 0.55}
+```mermaid {scale: 0.46}
 flowchart TD
-    A[Dashboard JSON] --> B[Git review and history]
-    B --> C[Dashboard provisioning]
+    A[Dashboard JSON] --> B[Git diff and review]
+    B --> C[Provisioning provider]
     C --> D[Grafana instance]
-    D --> E[Repeatable deployment]
 ```
 
-Dashboard definitions are version-controlled and loaded by Grafana provisioning providers. The same repository can reconstruct the monitoring layout.
+The repository becomes the durable definition of the monitoring layout. The instance reconciles that definition on deployment and during provider refresh.
 
----
-layout: top-title-two-cols
-color: gray-light
-align: c-l-l
----
-
-:: title ::
-
-# Why DCI monitoring matters
-
-:: left ::
-
-## Monitoring supports production
-
-JUNO DCI monitoring has become an essential operational tool. During multiple production campaigns it provided a shared view of jobs, data transfers, service health, host resources, and failures across the distributed infrastructure.
-
-By making problems visible early, monitoring helped the team keep production moving and provided the evidence needed to distinguish application, service, storage, and network problems.
-
-:: right ::
-
-## Monitoring and `dci-agent`
-
-The monitoring system also gives `dci-agent`, our AI agent, a structured source of operational context. The agent can combine dashboard data, service metrics, and component logs to help locate symptoms, identify likely causes, and guide the next diagnostic step.
-
-This human–agent collaboration shortens the path from an observed failure to an actionable diagnosis, helping protect the stability and continuity of JUNO production.
-
----
-layout: top-title-two-cols
-color: gray-light
-align: c-l-l
----
-
-:: title ::
-
-# Dashboard provisioning in practice
-
-:: left ::
-
-## 1. Register a provisioning provider
-
-```yaml
-# grafana/provisioning/dashboards/dashboards.yaml
-apiVersion: 1
-
-providers:
-  - name: tpc
-    orgId: 1
-    folder: TPC
-    type: file
-    updateIntervalSeconds: 30
-    allowUiUpdates: true
-    options:
-      path: /etc/grafana/provisioning/dashboards/tpc
-```
-
-:: right ::
-
-## 2. Mount the repository into Grafana
-
-```yaml
-# docker-compose.yml
-services:
-  grafana-server:
-    volumes:
-      - /home/docker/grafana/provisioning:
-          /etc/grafana/provisioning
-    environment:
-      - GF_RENDERING_SERVER_URL=
-          http://grafana-renderer:8081/render
-```
-
-The dashboard JSON files are then discovered from the mounted provider path and loaded by Grafana. Git changes become deployable configuration changes.
+<div class="takeaway compact mt-5">
+Backup protects the past. Provisioning controls the next change.
+</div>
 
 ---
 layout: top-title
@@ -166,83 +168,93 @@ align: c
 
 :: title ::
 
-# Dashboard provisioning workflow
+# The repository is now an operational control surface
 
 :: content ::
 
-```mermaid {scale: 0.7}
-flowchart LR
-    A[Grafana UI / AI Agent] --> B[Dashboard JSON]
-    B --> C[Git review and history]
-    C --> D[Provisioning configuration]
-    D --> E[Grafana instance]
-    E --> A
-```
+<div class="provider-grid mt-4">
+  <div class="provider"><strong>10</strong><span>Admin</span></div>
+  <div class="provider"><strong>9</strong><span>DIRAC</span></div>
+  <div class="provider"><strong>6</strong><span>TPC</span></div>
+  <div class="provider"><strong>4</strong><span>User</span></div>
+  <div class="provider"><strong>2</strong><span>Shift</span></div>
+</div>
 
-### What this changes
+<div class="delivery-loop mt-8">
+  <div><small>CREATE</small><strong>UI or agent</strong></div>
+  <mdi-arrow-right />
+  <div><small>CAPTURE</small><strong>Dashboard JSON</strong></div>
+  <mdi-arrow-right />
+  <div><small>CONTROL</small><strong>Git review</strong></div>
+  <mdi-arrow-right />
+  <div><small>RECONCILE</small><strong>30 s refresh</strong></div>
+</div>
 
-Dashboard changes become reviewable commits rather than opaque state inside a running service. A deployment can be reconstructed from version-controlled files, and an agent can work directly with structured dashboard definitions.
+<div class="two-notes mt-8">
+  <div><strong>31 dashboard files</strong><br/>Five providers reconstruct the current folder layout from version-controlled JSON.</div>
+  <div class="warning-note"><strong>Guard against drift</strong><br/><code>allowUiUpdates: true</code> keeps UI editing convenient; export → review → commit must remain the return path to Git.</div>
+</div>
 
 ---
-layout: top-title-two-cols
-color: green-light
-align: c-l-l
+layout: top-title
+color: gray-light
+align: c
 ---
 
 :: title ::
 
-# Why configuration helps AI-assisted operations
+# TPC transfer matrix: failures become patterns
 
-:: left ::
+:: content ::
 
-## Structured input
+<img src="/images/tpc-transfer-matrix-2026-07-17.png" class="matrix-shot mt-2" />
 
-Panels, queries, transformations, variables, and layout are explicit JSON objects. An agent can inspect the existing design and extend it without starting from a blank dashboard.
+<div class="matrix-caption">
+  <span><strong>4 modes</strong> · pull / push / streamed / all</span>
+  <span><strong>12 panels</strong> · 8 tables + 4 state timelines</span>
+  <span><strong>5 variables</strong> · time, sites, state, mode</span>
+</div>
 
-## Reviewable output
+<div class="takeaway compact matrix-takeaway mt-2">
+A grid turns individual transfer results into site-, direction-, and mode-correlated failure patterns. <span class="muted">Snapshot: 17 July 2026 · last 7 days.</span>
+</div>
 
-The result is a normal Git change: it can be diffed, discussed, tested, and reverted.
+---
+layout: top-title
+color: green-light
+align: c
+---
 
-:: right ::
+:: title ::
 
-## A practical example
+# AI assistance belongs inside the review loop
 
-Starting from the existing TPC monitoring dashboard, an AI Agent helped organize a complex transfer test matrix with consistent columns, multiple transfer modes, average panels, state timelines, and grading.
+:: content ::
 
-The important improvement is the workflow: domain knowledge remains with the operator, while repetitive dashboard composition becomes easier to automate.
+```mermaid {scale: 0.65}
+flowchart LR
+    A[Operator defines<br/>semantics and thresholds] --> B[Agent composes<br/>dashboard JSON]
+    B --> C[Build, diff<br/>and review]
+    C --> D[Provision to<br/>Grafana]
+    D --> E[Operator verifies<br/>the operational view]
+    E -. feedback .-> A
+```
+
+<div class="two-notes mt-8">
+  <div><strong>Good use of automation</strong><br/>Repeat panel structure, queries, transformations, variables, and layout consistently across a test matrix.</div>
+  <div><strong>Human control remains explicit</strong><br/>Domain meaning, grading thresholds, acceptance, and operational action stay with the operator.</div>
+</div>
+
+<div class="takeaway mt-8">
+The benefit is not “AI made a dashboard.” It is <strong>faster composition with a normal Git review boundary</strong>.
+</div>
 
 ---
 layout: section
 color: purple-light
 ---
 
-# AI-assisted TPC transfer monitoring
-
----
-layout: top-title-two-cols
-color: gray-light
-align: c-l-l
----
-
-:: title ::
-
-# TPC Transfer Monitoring: a test matrix in Grafana
-
-:: left ::
-
-## Matrix dimensions
-
-The dashboard compares transfer status across source site, destination site, success state, and copy mode. It presents the latest status as grids and the historical behavior as state timelines.
-
-The tracked modes include **pull**, **push**, **streamed**, and **all**.
-
-:: right ::
-
-## Current dashboard structure
-
-The version-controlled dashboard contains 12 panels, including latest-status grids, an all-mode average grid, per-mode average success-rate tables, and state timelines.
-
-<a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&refresh=1m"><mdi-open-in-new />Open the live TPC test matrix</a>
+# 2 · Give agents controlled access
 
 ---
 layout: top-title
@@ -252,26 +264,73 @@ align: c
 
 :: title ::
 
-# Live view: TPC transfer matrix
+# MCP adds a controlled machine interface to Grafana
 
 :: content ::
 
-<div style="width: 100%; height: 40vh; overflow: hidden;">
-  <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-2d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"
-    style="width: 250%; height: 100vh; transform: scale(0.4); transform-origin: 0 0; border: 0;"
-  ></iframe>
+```mermaid {scale: 0.54}
+flowchart LR
+    C[AI agent or MCP client] -->|MCP JSON-RPC| G[mcp.ihep.ac.cn<br/>central gateway]
+
+    subgraph CP[Central identity and policy]
+        G -->|verify key and scope| A[Auth service]
+        A --> L[(IHEP LDAP)]
+        A --> P[(PostgreSQL)]
+    end
+
+    G -->|authorized tool call| M[mcp-grafana]
+
+    subgraph MB[Monitoring boundary]
+        M -->|Grafana API / render| F[DCI Grafana]
+        F --> D[(Prometheus / Elasticsearch)]
+        F --> R[grafana-image-renderer]
+        R --> F
+    end
+```
+
+<div class="two-notes compact-notes mt-2">
+  <div><strong>Policy stays centralized</strong><br/>One authenticated gateway enforces identity and scope.</div>
+  <div><strong>Grafana stays behind the boundary</strong><br/><code>mcp-grafana</code> adapts dashboard metadata, queries, and rendering.</div>
 </div>
 
-<div class="text-center">
-<a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new />Open the live TPC transfer matrix</a>
+---
+layout: top-title
+color: gray-light
+align: c
+---
+
+:: title ::
+
+# From an operational question to evidence
+
+:: content ::
+
+<div class="question-flow mt-6">
+  <div class="flow-step"><small>1 · ASK</small><strong>“Why is TPC push failing for a site pair?”</strong></div>
+  <mdi-arrow-right />
+  <div class="flow-step"><small>2 · AUTHORIZE</small><strong>Gateway verifies key and scope</strong></div>
+  <mdi-arrow-right />
+  <div class="flow-step"><small>3 · INSPECT</small><strong>Query data and render the relevant panel</strong></div>
+  <mdi-arrow-right />
+  <div class="flow-step"><small>4 · EXPLAIN</small><strong>Return evidence and the next diagnostic step</strong></div>
 </div>
+
+<div class="evidence-grid mt-10">
+  <div><mdi-code-json /><strong>Structured evidence</strong><span>dashboard definitions, variables, queries, and data results</span></div>
+  <div><mdi-image-search-outline /><strong>Visual evidence</strong><span>rendered panels preserve the pattern an operator would see</span></div>
+  <div><mdi-shield-account-outline /><strong>Operational boundary</strong><span>the agent gathers and explains; remediation remains an explicit action</span></div>
+</div>
+
+<div class="takeaway mt-9">
+MCP is an access path to monitoring evidence — <strong>not another monitoring data source</strong>.
+</div>
+
 ---
 layout: section
 color: lime-light
 ---
 
-## Grafana through the IHEP MCP system
+# 3 · Put logs beside metrics
 
 ---
 layout: top-title
@@ -281,174 +340,28 @@ align: c
 
 :: title ::
 
-# MCP-Grafana architecture
+# Central logs close the context gap
 
 :: content ::
 
-The centralized server is the controlled entry point. It authenticates the request, forwards the authorized MCP call to `mcp-grafana`, and keeps the Grafana service behind the gateway boundary.
-
-
-```mermaid {scale: 0.5}
+```mermaid {scale: 0.70}
 flowchart LR
-    A[AI Agent or MCP client] -->|MCP JSON-RPC| B[mcp.ihep.ac.cn<br/>centralized mcp-server]
-    B -->|authentication and authorization| C[Auth service]
-    B -->|reverse proxy| D[mcp-grafana]
-    D -->|Grafana API / rendering requests| E[dci-grafana]
-    E --> F[(Prometheus / Elasticsearch)]
-    E --> G[grafana-image-renderer]
-    G --> D
-```
-
-
----
-layout: top-title-two-cols
-color: gray-light
-align: c-l-l
----
-
-:: title ::
-
-# What MCP adds to monitoring
-
-:: left ::
-
-## Query and inspect
-
-An AI client can ask for dashboard information, query monitoring data, inspect panels, and retrieve results through a standardized MCP interface.
-
-This turns Grafana from a human-only visualization endpoint into a service that can participate in an operational workflow.
-
-:: right ::
-
-## Preview and explain
-
-The `grafana/grafana-image-renderer` plugin provides the rendering capability needed by MCP-Grafana to preview dashboard panels and views.
-
-The agent can combine structured query results with visual context when diagnosing a system or preparing a report.
-
----
-layout: top-title
-color: gray-light
-align: c
----
-
-:: title ::
-
-# From a question to a monitoring answer
-
-:: content ::
-
-```mermaid {scale: 0.62}
-sequenceDiagram
-    participant U as User / AI Agent
-    participant G as mcp-server
-    participant A as Auth service
-    participant M as mcp-grafana
-    participant F as Grafana
-    U->>G: MCP request
-    G->>A: Verify credentials and scope
-    A-->>G: Authorization result
-    G->>M: Forward authorized request
-    M->>F: Query dashboard or data source
-    F-->>M: Data / panel / rendered image
-    M-->>G: MCP response
-    G-->>U: Monitoring answer
-```
-
-This separates centralized identity and policy from the Grafana-specific implementation, while preserving a single authenticated entry point at `mcp.ihep.ac.cn`.
-
----
-layout: section
-color: red-light
----
-
-# Centralized DIRAC component logs
-
----
-layout: top-title
-color: gray-light
-align: c
----
-
-:: title ::
-
-# DIRAC log pipeline
-
-:: content ::
-
-```mermaid {scale: 0.50}
-flowchart LR
-    A[DIRAC components] -->|component log messages| B[ActiveMQ]
+    A[DIRAC components] -->|publish log messages| B[ActiveMQ]
     B -->|consume and parse| C[Logstash]
     C -->|index| D[(Elasticsearch)]
-    D -->|queries and aggregations| E[Grafana]
+    D -->|query and aggregate| E[Grafana]
     E --> F[Component Logs dashboard]
 ```
 
-The new chain centralizes component logs instead of leaving diagnosis dependent on individually accessing service hosts. It complements the existing Prometheus-based infrastructure and service metrics.
-
----
-layout: top-title-two-cols
-color: gray-light
-align: c-l-l
----
-
-:: title ::
-
-# Component Logs dashboard
-
-:: left ::
-
-## Operational view
-
-The dashboard provides three complementary views:
-
-The log-level distribution shows the balance of information, warning, and error messages. A time series shows changes over time, while a table exposes the individual records for investigation.
-
-Variables allow filtering by **Category**, **Name**, and **Level**.
-
-:: right ::
-
-
-<div style="width: 100%; height: 35vh; overflow: hidden; margin-top: 1rem;">
-  <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"
-    style="width: 200%; height: 70vh; transform: scale(0.5); transform-origin: 0 0; border: 0;"
-  ></iframe>
+<div class="question-cards mt-8">
+  <div><small>METRICS</small><strong>What changed?</strong><span>Resource and service behavior reveal the symptom.</span></div>
+  <div><small>TIMELINE</small><strong>When did it start?</strong><span>Central timestamps define the relevant diagnostic window.</span></div>
+  <div><small>LOG RECORDS</small><strong>Which component explains it?</strong><span>Event-level context replaces host-by-host inspection.</span></div>
 </div>
 
-<a href="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all"><mdi-open-in-new />Open the live Component Logs dashboard</a>
-
----
-layout: top-title-two-cols
-color: green-light
-align: c-l-l
----
-
-:: title ::
-
-# Monitoring is moving from display to diagnosis
-
-:: left ::
-
-## Three complementary layers
-
-**Metrics** describe resource usage and service behavior through Prometheus. **Logs** provide event-level context through Elasticsearch. **Dashboards** combine the two into operational views for people and agents.
-
-:: right ::
-
-## Practical benefits
-
-The upgrades make it easier to reproduce a monitoring environment, compare changes over time, build a transfer test matrix, and follow a DIRAC problem from a high-level symptom to the responsible component log.
-
-The MCP layer creates an additional path for automated inspection and explanation.
-
----
-layout: section
-color: orange-light
----
-
-# Summary and next steps
+<div class="takeaway mt-8">
+Prometheus and Elasticsearch answer different questions; Grafana brings both into the same operational workflow.
+</div>
 
 ---
 layout: top-title
@@ -458,63 +371,133 @@ align: c
 
 :: title ::
 
-# Summary
+# The Component Logs dashboard follows the triage sequence
 
 :: content ::
 
-- Grafana dashboards have moved from mostly instance-local state to version-controlled configuration.
-- The TPC transfer matrix demonstrates how structured dashboards can be extended efficiently with AI assistance.
-- MCP-Grafana is exposed through the authenticated, centralized IHEP MCP server and can use Grafana rendering for previews.
-- DIRAC component logs now follow a centralized ActiveMQ → Logstash → Elasticsearch → Grafana path.
-- Together, these changes improve reproducibility, collaboration, observability, and the potential for AI-assisted operations.
+<div class="log-panels mt-3">
+  <div class="log-panel">
+    <div class="mock-pie"></div>
+    <div><small>1 · DISTRIBUTION</small><h2>Is the error mix abnormal?</h2><p>One pie panel compares information, warning, and error volume.</p></div>
+  </div>
+  <div class="log-panel">
+    <svg class="mock-line" viewBox="0 0 240 90" aria-label="example log volume timeline"><polyline points="0,70 25,66 50,68 75,42 100,54 125,20 150,35 175,28 200,60 240,48" /></svg>
+    <div><small>2 · TIMELINE</small><h2>When did the change begin?</h2><p>One time-series panel narrows the investigation window.</p></div>
+  </div>
+  <div class="log-panel">
+    <div class="mock-table"><i></i><i></i><i></i><i></i></div>
+    <div><small>3 · RECORDS</small><h2>Which message is actionable?</h2><p>One table exposes the individual records for investigation.</p></div>
+  </div>
+</div>
 
-### Next steps
-
-Continue expanding dashboard coverage, add more actionable alerts, expose carefully scoped monitoring tools through MCP, and standardize the workflow for reviewing and deploying AI-assisted dashboard changes.
+<div class="filter-strip mt-5">
+  <strong>Filter the same evidence by</strong>
+  <span>Category</span><span>Name</span><span>Level</span>
+  <a href="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now"><mdi-open-in-new /> Open live dashboard</a>
+</div>
 
 ---
-layout: credits
+layout: top-title
+color: green-light
+align: c
+---
+
+:: title ::
+
+# The operational loop is now connected
+
+:: content ::
+
+```mermaid {scale: 0.66}
+flowchart LR
+    S[TPC or service symptom] --> V[Grafana operational view]
+    V --> E[Query metrics and logs]
+    E --> D[Evidence-based diagnosis]
+    D --> A[Operator action]
+    A -. learning .-> C[Dashboard / alert as code]
+    C -. provision .-> V
+    M[MCP agent] -. gather and explain .-> E
+```
+
+<div class="role-grid mt-9">
+  <div><strong>Grafana</strong><span>makes the pattern visible</span></div>
+  <div><strong>Metrics + logs</strong><span>provide complementary evidence</span></div>
+  <div><strong>MCP agent</strong><span>shortens evidence gathering</span></div>
+  <div><strong>Operator</strong><span>owns judgment and action</span></div>
+</div>
+
+<div class="takeaway mt-8">
+The architecture connects observation to diagnosis while keeping change review and operational authority explicit.
+</div>
+
+---
+layout: top-title-two-cols
+color: gray-light
+align: c-l-l
+---
+
+:: title ::
+
+# Delivered now, with a clear next increment
+
+:: left ::
+
+## Delivered
+
+<div class="status-stack">
+  <div><mdi-check-circle-outline /><span><strong>Dashboard provisioning</strong><br/>31 JSON dashboards under five providers</span></div>
+  <div><mdi-check-circle-outline /><span><strong>TPC transfer view</strong><br/>12 panels across four transfer modes</span></div>
+  <div><mdi-check-circle-outline /><span><strong>Controlled MCP path</strong><br/>Central gateway to <code>mcp-grafana</code></span></div>
+  <div><mdi-check-circle-outline /><span><strong>Central component logs</strong><br/>Three complementary diagnostic panels</span></div>
+</div>
+
+:: right ::
+
+## Next increment
+
+<div class="status-stack next">
+  <div><mdi-arrow-right-circle-outline /><span><strong>Actionable alerts</strong><br/>Thresholds, ownership, and response links</span></div>
+  <div><mdi-arrow-right-circle-outline /><span><strong>Dashboard release checks</strong><br/>Build, schema, and screenshot smoke tests</span></div>
+  <div><mdi-arrow-right-circle-outline /><span><strong>Scoped MCP operations</strong><br/>Read-first tools with explicit authorization</span></div>
+  <div><mdi-arrow-right-circle-outline /><span><strong>Metrics-to-logs drill-down</strong><br/>Carry site, component, and time context</span></div>
+</div>
+
+---
+layout: top-title
+color: green-light
+align: c
+---
+
+:: title ::
+
+# Three takeaways
+
+:: content ::
+
+<div class="three-cards takeaway-cards mt-8">
+  <div class="story-card"><strong>1</strong><h2>Reproducible</h2><p>Git and provisioning turn dashboard changes into reviewable, reconstructable configuration.</p></div>
+  <div class="story-card"><strong>2</strong><h2>Diagnosable</h2><p>TPC views expose patterns; centralized logs explain the component events behind them.</p></div>
+  <div class="story-card"><strong>3</strong><h2>Accessible</h2><p>The same Grafana evidence serves operators directly and agents through the IHEP MCP gateway.</p></div>
+</div>
+
+<div class="closing-line mt-12">
+The key upgrade is not another dashboard.<br/>
+It is a <strong>shorter, controlled path from signal to action</strong>.
+</div>
+
+---
+layout: cover
 color: navy
 loop: true
-speed: 0.8
-title: credits/people
+title: Questions
 ---
 
-<div class="grid text-size-4 grid-cols-3 w-3/4 gap-y-10 auto-rows-min ml-auto mr-auto">
-    <div class="grid-item text-center mr-0 col-span-3">
-        <strong>DCI monitoring</strong><br>
-    </div>
-    <div class="grid-item text-right mr-4 col-span-1">
-        <strong>Reporter</strong>
-    </div>
-    <div class="grid-item col-span-2">
-        Xiao Han <i>IHEP, CC</i><br/>
-    </div>
-    <div class="grid-item text-right mr-4 col-span-1">
-        <strong>Systems</strong>
-    </div>
-    <div class="grid-item col-span-2">
-        JUNO DCI · Grafana · DIRAC · IHEP MCP<br/>
-    </div>
-</div>
+# Questions?
 
-<div class="text-center mt-24 text-2xl">
-    <strong>Questions?</strong>
-</div>
-<div class="text-center mt-12 text-3xl">
-    Thank you!
-</div>
+## Thank you
 
-<style>
-.mermaid {
-    display: flex;
-    justify-content: center;
-    overflow: visible;
-}
+**Xiao Han · IHEP, CC**<br/>
+DCI Group · JUNO Collaboration
 
-.mermaid > svg {
-    max-width: 100%;
-    height: auto;
-    margin: 0 auto;
-}
-</style>
+<a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-view-dashboard-outline /> dci-grafana.ihep.ac.cn</a>
+ · <a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-github /> slides & source</a>
