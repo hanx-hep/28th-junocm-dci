@@ -6,6 +6,7 @@ routerMode: hash
 theme: neversink
 lineNumbers: true
 favicon: /images/juno_logo_transparent.png
+download: './28th-junocm-dci.pdf'
 title: JUNO DCI monitoring — from dashboards to diagnosis
 titleTemplate: '%s - Xiao Han'
 ---
@@ -243,11 +244,11 @@ align: c
 
 :: content ::
 
-<div style="width: 100%; height: 58vh; overflow: hidden; border: 1px solid #d1d5db; border-radius: 0.55rem; box-shadow: 0 6px 18px rgba(15, 23, 42, 0.10);">
+<div class="dashboard-frame tpc-dashboard-frame">
   <iframe
     src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"
     scrolling="yes"
-    style="width: 250%; height: 145vh; transform: scale(0.4); transform-origin: 0 0; border: 0;"
+    class="tpc-dashboard-iframe"
   ></iframe>
 </div>
 
@@ -468,11 +469,11 @@ align: c-l-l
 
 :: right ::
 
-<div style="width: 100%; height: 48vh; overflow: hidden; margin-top: 0.5rem; border: 1px solid #d1d5db; border-radius: 0.55rem; background: #f8fafc;">
+<div class="dashboard-frame component-dashboard-frame">
   <iframe
     src="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"
     scrolling="yes"
-    style="width: 200%; height: 96vh; transform: scale(0.5); transform-origin: 0 0; border: 0;"
+    class="component-dashboard-iframe"
   ></iframe>
 </div>
 
