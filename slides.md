@@ -253,43 +253,59 @@ Timing: 0:10
 The third part is component logs. Metrics show that a service changed. Logs help us find the component event related to that change.
 -->
 ---
-layout: top-title
+layout: top-title-two-cols
 color: gray-light
-align: c
+align: c-lt-lt
 ---
 
 :: title ::
 
 # Central logs close the context gap
 
-:: content ::
+:: left ::
 
-JUNO DIRAC runs more than **60** components, each producing its **own logs** , which are stored and **rotated on local disks**.
+## DIRAC configuration
 
-```mermaid {scale: 0.70}
-flowchart LR
-    A[DIRAC components] -->|publish log messages| B[ActiveMQ]
-    B -->|consume and parse| C[Logstash]
-    C -->|index| D[(Elasticsearch)]
-    D -->|query and aggregate| E[Grafana]
-    E --> F[Component Logs dashboard]
+JUNO DIRAC runs more than **60 components**. By default, their logs are written and rotated on local disks.
+
+```text
+# /opt/dirac/etc/CAS_Prod.cfg
+Logging
+{
+  DefaultServicesBackends = stdout
+  DefaultServicesBackends += mqLogs
+
+  DefaultAgentsBackends = stdout
+  DefaultAgentsBackends += mqLogs
+}
 ```
 
-<div class="question-cards mt-8">
-  <div><small>METRICS</small><strong>What changed?</strong><span>Resource and service behavior reveal the symptom.</span></div>
-  <div><small>TIMELINE</small><strong>When did it start?</strong><span>Central timestamps define the relevant diagnostic window.</span></div>
-  <div><small>LOG RECORDS</small><strong>Which component explains it?</strong><span>Event-level context replaces host-by-host inspection.</span></div>
+<div class="takeaway compact mt-4">
+Adding <code>mqLogs</code> enables central log delivery for both services and agents, while <code>stdout</code> remains enabled.
 </div>
 
-<div class="takeaway mt-8">
-Prometheus and Elasticsearch answer different questions; Grafana brings both into the same operational workflow.
+:: right ::
+
+## Central log pipeline
+
+```mermaid {scale: 0.46}
+flowchart TD
+    A[DIRAC services<br/>and agents] --> B[mqLogs backend]
+    B --> C[ActiveMQ]
+    C --> D[Logstash]
+    D --> E[(Elasticsearch)]
+    E --> F[Grafana]
+```
+
+<div class="takeaway compact mt-2">
+ActiveMQ transports; Logstash parses; Elasticsearch stores; Grafana queries and displays.
 </div>
 
 
 <!--
-Timing: 1:00
+Timing: 1:05
 
-DIRAC components publish log messages to ActiveMQ. Logstash reads and parses the messages. It then writes them to Elasticsearch. Grafana queries Elasticsearch and displays the results. This supports three steps in an investigation. Metrics show what changed. A timeline shows when the change started. Log records show which component produced the message. The timestamps and filters define one time window for the investigation. We no longer need to check each service host separately. Prometheus and Elasticsearch provide different data, and Grafana presents them in one place.
+JUNO DIRAC runs more than 60 components. By default, each component writes logs to its local disk. In CAS_Prod.cfg, we keep stdout and add mqLogs for both services and agents. The mqLogs backend sends the messages to ActiveMQ. Logstash reads and parses them, then writes them to Elasticsearch. Grafana queries this central store. This configuration gives services and agents the same log path while keeping local output available.
 -->
 ---
 layout: top-title-two-cols
@@ -413,21 +429,21 @@ align: c
   <div class="flow-step"><small>4 · EXPLAIN</small><strong>Return evidence and the next diagnostic step</strong></div>
 </div>
 
-<div class="evidence-grid mt-10">
-  <div><mdi-code-json /><strong>Structured evidence</strong><span>dashboard definitions, variables, queries, and data results</span></div>
-  <div><mdi-image-search-outline /><strong>Visual evidence</strong><span>rendered panels preserve the pattern an operator would see</span></div>
-  <div><mdi-shield-account-outline /><strong>Operational boundary</strong><span>the agent gathers and explains; remediation remains an explicit action</span></div>
+<div class="evidence-grid mt-8">
+  <div><mdi-magnify /><strong>Find dashboards</strong><span><code>search_dashboards</code><br/><code>get_dashboard_summary</code></span></div>
+  <div><mdi-code-json /><strong>Read queries and data</strong><span><code>get_dashboard_panel_queries</code><br/><code>query_prometheus</code></span></div>
+  <div><mdi-image-search-outline /><strong>Return visual evidence</strong><span><code>get_panel_image</code><br/><code>generate_deeplink</code></span></div>
 </div>
 
-<div class="takeaway mt-9">
-MCP is an access path to monitoring evidence — <strong>not another monitoring data source</strong>.
+<div class="takeaway mt-7">
+These read tools cover dashboard discovery, query inspection, and panel rendering. Write operations still require explicit authorization.
 </div>
 
 
 <!--
 Timing: 1:00
 
-Here is one example. A user asks why TPC push transfers are failing for a site pair. First, the gateway checks the user and the requested scope. Next, mcp-grafana queries the data and renders the related panel. The agent returns the query results, the panel, and a suggested next check. The evidence can be structured data or a rendered image. The agent collects and explains this evidence. It does not perform an operational action by itself. MCP provides access to monitoring data. It is not a new data source.
+Here is one example. A user asks why TPC push transfers are failing for a site pair. First, the gateway checks the user and the requested scope. Then the agent can use search_dashboards and get_dashboard_summary to find the dashboard. It can read panel queries with get_dashboard_panel_queries and query Prometheus when needed. It can return a panel image with get_panel_image or a Grafana link with generate_deeplink. These are actual tools returned by the current IHEP MCP tools/list response. They support inspection and explanation. Write operations still need explicit authorization.
 -->
 ---
 layout: section
