@@ -1,85 +1,89 @@
-# From Dashboards to Diagnosis
+# Monitoring Upgrades for the JUNO DCI
 
 ## 15-minute English speaking script
 
-The timings are approximate and include short pauses for the two live Grafana views. Total planned time is about 15 minutes.
+The timings are approximate. They include short pauses for the two live Grafana views. The full talk should take about 15 minutes.
 
-## Slide 1 — From dashboards to diagnosis · 0:35
+## Slide 1 — Monitoring upgrades for the JUNO DCI · 0:30
 
-Good afternoon, everyone. I am Xiao Han, presenting on behalf of the DCI Group. Today I will report the latest monitoring upgrades for the JUNO distributed computing infrastructure. The title, “From dashboards to diagnosis,” summarizes the direction of this work. We are not only adding more charts. We are connecting configuration, monitoring evidence, and controlled agent access so that an operational symptom can lead more quickly to a useful diagnosis and a clear next action.
+Good afternoon. I am Xiao Han, and I am speaking on behalf of the DCI Group. Today I will present our recent work on monitoring for JUNO distributed computing. This report covers dashboard configuration in Git, access to Grafana through MCP, and central component logs. I will also show how an AI agent can help build and check dashboards. The main subject is the workflow from monitoring data to diagnosis and operator action.
 
-## Slide 2 — A shorter path from signal to action · 0:55
+## Slide 2 — Overview · 0:55
 
-The main message is shown on this slide. Monitoring is becoming an operational system rather than a collection of independent dashboards. We are improving three properties. First, it is reproducible: dashboard definitions and provisioning are kept in Git. Second, it is diagnosable: metrics show the symptom, while centralized logs explain the events behind it. Third, it is accessible: operators use Grafana directly, and agents can reach the same evidence through the controlled IHEP MCP gateway. The goal is simple—to shorten the time between noticing that something is wrong and knowing the next useful action.
+Here is the overview. Monitoring now does more than display charts. It supports JUNO data reprocessing. It helps us raise alerts, locate faults, and recover services. We made three updates. First, dashboard JSON is stored in Git. Second, agents can access Grafana through MCP. Third, component logs are collected in one place. Together, these updates make the monitoring system easier to review, use, and maintain.
 
-## Slide 3 — One monitoring loop · 1:10
+## Slide 3 — One monitoring loop, three upgrades · 1:10
 
-This diagram gives the complete picture. On the left are the operational signals: service and host metrics, TPC transfer records, and DIRAC component logs. Metrics go to Prometheus. Transfer records and centralized logs are available through Elasticsearch, with component logs passing through ActiveMQ and Logstash. Grafana brings these data sources together as the operational view. Dashboard JSON in Git is provisioned into Grafana, so the visual layer is also controlled configuration. Operators inspect Grafana directly. An AI agent reaches Grafana through the centralized MCP gateway and the mcp-grafana adapter. These are the three upgrades I will discuss: a reproducible foundation, richer evidence, and controlled interfaces.
+This diagram shows the full system. On the left, we have three types of data. They are service and host metrics, TPC transfer records, and DIRAC component logs. Metrics go to Prometheus. Transfer records go to Elasticsearch. Component logs pass through ActiveMQ and Logstash before they reach Elasticsearch. Grafana reads both Prometheus and Elasticsearch. Dashboard JSON is stored in Git and provisioned to Grafana. Operators use Grafana directly. AI agents reach Grafana through the IHEP MCP gateway and the mcp-grafana service. These are the three parts of this report: configuration in Git, monitoring data, and MCP access.
 
-## Slide 4 — Make dashboards reproducible · 0:15
+## Slide 4 — Make dashboards reproducible · 0:10
 
-I will begin with the foundation: making dashboards reproducible. This sounds like a configuration detail, but it changes how safely we can review, deploy, and recover the monitoring environment.
+I will start with dashboard configuration. The goal is to store dashboard definitions in Git and load them into Grafana in a standard way.
 
-## Slide 5 — Provisioning moves the control point · 1:05
+## Slide 5 — Dashboards are stored in a Git repository · 1:00
 
-Previously, the running Grafana instance was effectively the main source of truth. We edited dashboards in the UI, Grafana stored the state, and a manual backup protected us if recovery was needed. A backup is useful, but it does not give a clear review path for every change. In the current workflow, dashboard JSON is stored in Git, reviewed as a normal diff, and loaded through a provisioning provider. This makes the monitoring layout reconstructable and makes changes visible before deployment. The distinction at the bottom is important: backup protects the past, while provisioning controls the next change.
+The left side shows the old method. We edited a dashboard in the Grafana UI. Grafana stored the result in its database. We made a backup when needed. This worked for recovery, but it did not provide a review process for each change. The right side shows the current method. We can still edit a dashboard in the UI, or edit its JSON directly. We then review the JSON diff in Git. The provisioning provider loads the reviewed file into Grafana. Git now stores the dashboard definition.
 
-## Slide 6 — The repository as a control surface · 1:10
+## Slide 6 — Dashboard files and the delivery loop · 1:05
 
-The repository now contains 31 dashboard files under five providers: Admin, DIRAC, TPC, User, and Shift. The delivery loop is create, capture, control, and reconcile. An operator or an agent can compose a dashboard, but the result must return as dashboard JSON. Git is the review boundary, and Grafana refreshes the provider every 30 seconds. One guardrail deserves attention: UI updates are still allowed for convenience. Therefore, an edit made in Grafana must be exported, reviewed, and committed. Otherwise, the running instance can drift away from the repository. Git remains the durable source of truth.
+The repository now has 31 dashboard files. They are grouped under five providers: Admin, DIRAC, TPC, User, and Shift. The workflow has four steps. We create a dashboard, capture it as JSON, review it in Git, and let Grafana load it. Grafana checks the provider every 30 seconds. UI editing is still enabled. So an edit made in Grafana must come back to Git. We export it, review it, and commit it. Otherwise, Grafana and the repository can contain different versions.
 
-## Slide 7 — Live TPC transfer matrix · 1:20
+## Slide 7 — Panel configuration details · 0:50
 
-This is the live TPC transfer monitoring dashboard. It may take a moment to load. At the top, we can filter by time interval, source site, destination site, success state, and copy mode. The dashboard contains 12 panels: eight tables and four state timelines, covering pull, push, streamed, and combined modes.
+This slide shows the main configuration steps. First, we register a file-based provisioning provider. It points to the TPC dashboard directory and checks for updates every 30 seconds. Second, we mount the provisioning directory into the Grafana container. Third, we export the existing dashboards from grafana.db and save them as JSON files. After these steps, Grafana can load the dashboard definitions from the repository.
 
-[Demo: scroll vertically through the matrix and compare at least two copy modes.]
+## Slide 8 — Give agents controlled access · 0:10
 
-The value of the matrix is correlation. A single failed transfer is only an event. A repeated row, column, or mode pattern suggests that the problem follows a site, a direction, or a transfer method. The average panels also help distinguish a transient failure from persistent degradation. This turns many individual test records into a compact operational signal.
+The second part is MCP access. An agent can use monitoring data, but it must pass through authentication and authorization checks.
 
-## Slide 8 — AI inside the review loop · 0:55
+## Slide 9 — MCP access to Grafana · 1:10
 
-The TPC dashboard also demonstrates where AI assistance is useful. The operator defines the semantics, the transfer modes, the thresholds, and what the colors mean. The agent can then handle repetitive dashboard composition: panel structure, queries, transformations, variables, and layout. The output is built, diffed, and reviewed before provisioning. Finally, the operator verifies the operational view. So the important result is not that AI made a dashboard. The result is faster composition while preserving a normal Git review boundary and explicit human control.
+The client does not connect to Grafana directly. It sends an MCP request to mcp.ihep.ac.cn. This is the central gateway. The gateway checks the API key and its scope. The authentication service uses IHEP LDAP and PostgreSQL. If the request is allowed, the gateway sends the tool call to mcp-grafana. This service uses the Grafana API and the rendering interface. Grafana reads data from Prometheus and Elasticsearch. It can also use the image renderer. In this design, identity and policy stay at the central gateway. Grafana operations stay in the mcp-grafana service.
 
-## Slide 9 — Controlled agent access · 0:15
+## Slide 10 — From an operational question to evidence · 1:00
 
-The second upgrade is controlled machine access. Once monitoring evidence is structured, an agent can use it—but only through a clear authentication and authorization boundary.
+Here is one example. A user asks why TPC push transfers are failing for a site pair. First, the gateway checks the user and the requested scope. Next, mcp-grafana queries the data and renders the related panel. The agent returns the query results, the panel, and a suggested next check. The evidence can be structured data or a rendered image. The agent collects and explains this evidence. It does not perform an operational action by itself. MCP provides access to monitoring data. It is not a new data source.
 
-## Slide 10 — MCP-Grafana architecture · 1:15
+## Slide 11 — Put logs beside metrics · 0:10
 
-The client does not connect directly to Grafana. It sends an MCP JSON-RPC request to the centralized gateway at mcp.ihep.ac.cn. The gateway verifies the key and scope through the authentication service, which is connected to IHEP LDAP and PostgreSQL. Only an authorized tool call is forwarded to mcp-grafana. Inside the monitoring boundary, mcp-grafana uses the Grafana API and rendering interface. Grafana reads Prometheus and Elasticsearch and can use the image renderer for visual context. This separation gives us two useful properties: identity and policy stay centralized, while Grafana-specific behavior stays inside a dedicated adapter.
+The third part is component logs. Metrics show that a service changed. Logs help us find the component event related to that change.
 
-## Slide 11 — From question to evidence · 1:00
+## Slide 12 — Central component logs · 1:00
 
-Here is a concrete diagnostic path. The user asks why TPC push transfers are failing for a site pair. The gateway first verifies the caller and scope. Then mcp-grafana queries the relevant data and can render the panel that an operator would inspect. The agent returns the evidence and proposes the next diagnostic step. There are two forms of evidence: structured definitions and query results, and visual patterns from rendered panels. The boundary is equally important. The agent gathers and explains evidence; remediation remains an explicit operational action. MCP is an access path, not a new monitoring data source.
+DIRAC components publish log messages to ActiveMQ. Logstash reads and parses the messages. It then writes them to Elasticsearch. Grafana queries Elasticsearch and displays the results. This supports three steps in an investigation. Metrics show what changed. A timeline shows when the change started. Log records show which component produced the message. The timestamps and filters define one time window for the investigation. We no longer need to check each service host separately. Prometheus and Elasticsearch provide different data, and Grafana presents them in one place.
 
-## Slide 12 — Put logs beside metrics · 0:15
+## Slide 13 — Component Logs dashboard · 1:10
 
-The third upgrade is to put centralized component logs beside metrics. Metrics are good at showing that behavior changed. Logs are needed to explain which component event caused that change.
+This is the live Component Logs dashboard. It may load slowly, so I will wait for a moment. The left side shows the three investigation steps. The live dashboard is on the right, and we can scroll inside it.
 
-## Slide 13 — Central logs close the gap · 1:00
+[Demo: wait for the dashboard, then scroll through the three panels.]
 
-DIRAC components publish log messages to ActiveMQ. Logstash consumes and parses them, indexes them in Elasticsearch, and Grafana provides the query and visualization layer. This pipeline supports three stages of triage. Metrics answer, “What changed?” The timeline answers, “When did it begin?” Individual records answer, “Which component explains it?” Central timestamps and common filters define one investigation window, replacing the need to visit service hosts one by one. Prometheus and Elasticsearch answer different questions, but Grafana puts both in the same operational workflow.
+The first panel shows the number of information, warning, and error messages. The second panel shows how that number changes over time. The third panel shows individual records. We first check the message levels. Then we select a time window. Finally, we read the related records. The Category, Name, and Level filters apply to all three panels.
 
-## Slide 14 — Live Component Logs view · 1:15
+## Slide 14 — AI workflow · 0:10
 
-This is the live Component Logs dashboard. It loads more slowly than the TPC dashboard, so I will give it a moment. The vertical pane on the right is scaled down, and we can scroll inside it.
+The last part shows how an AI agent can support the dashboard workflow from creation to verification.
 
-[Demo: scroll through the three panels when they have loaded.]
+## Slide 15 — AI assistance throughout the monitoring workflow · 1:00
 
-The first panel shows the distribution of information, warning, and error messages. The second shows how the volume changes over time. The third exposes individual records. A practical investigation starts broad and then narrows: first identify an abnormal error mix, then select the time window, and finally inspect the responsible message. Category, Name, and Level filters keep the same context across all three views.
+The operator starts by defining the meaning of the dashboard and its thresholds. The agent receives this request and creates the dashboard JSON. We build the result and review the Git diff. The reviewed file is then provisioned to Grafana. The agent can check the result through the MCP server. If a problem is found, the result goes back to the agent for another change. The agent handles repeated work, such as panel structures, queries, variables, and layouts. The operator still defines the meaning, approves the result, and decides what action to take.
 
-## Slide 15 — The connected operational loop · 1:00
+## Slide 16 — TPC transfer matrix · 1:15
 
-These upgrades now form one connected loop. A TPC or service symptom appears in Grafana. We query the relevant metrics and logs, build an evidence-based diagnosis, and leave the operational action with the operator. The MCP agent can shorten evidence gathering and explanation, but it does not remove human judgment. After the incident, the learning can return to the system as a better dashboard or alert definition. Because that definition is code, it passes through review and provisioning before becoming part of the next operational view.
+This is the live TPC transfer matrix. It is based on Albert Dzakhoev's work. We used AI to improve the sorting and add panels for the average success rate. The dashboard covers pull, push, streamed, and combined transfer modes.
 
-## Slide 16 — Delivered and next · 1:00
+[Demo: scroll through the matrix and compare two transfer modes.]
 
-The left side summarizes what is delivered now: dashboard provisioning with 31 JSON files, the 12-panel TPC transfer view, the controlled MCP path to Grafana, and centralized component logs with three complementary views. The right side shows the next increment. We need actionable alerts with clear ownership, automated dashboard release checks, read-first MCP operations with explicit authorization, and drill-down links that carry site, component, and time context from metrics to logs. These steps turn the current architecture into a more repeatable operational practice.
+A single failed transfer is one event. A repeated row or column can point to a site problem. A pattern in one mode can point to a transfer-method problem. The average success rate helps us see whether a problem is short or continues over time. The matrix gives us a summary of many transfer tests.
 
-## Slide 17 — Three takeaways · 0:50
+## Slide 17 — Delivered work and next steps · 1:00
 
-There are three takeaways. First, the monitoring environment is more reproducible because dashboards are reviewed and provisioned from Git. Second, it is more diagnosable because TPC views expose patterns and centralized logs provide component-level context. Third, it is more accessible because the same Grafana evidence serves operators directly and agents through the IHEP MCP gateway. The key upgrade is not simply another dashboard. It is a shorter and controlled path from signal to action.
+The left side lists the work that is available now. We have 31 provisioned dashboard files, the TPC transfer view, MCP access to Grafana, and central component logs. The right side lists the next steps. We need alerts with owners and response links. We need checks for dashboard builds, schemas, and screenshots. MCP operations should start with read-only access and clear authorization. We also want links from metrics to logs that keep the site, component, and time range. These steps will improve the current workflow.
 
-## Slide 18 — Questions · 0:15
+## Slide 18 — Three takeaways · 0:50
 
-That concludes my update. Thank you for your attention, and I am happy to take questions.
+I have three takeaways. First, Git and provisioning let us review and restore dashboard definitions. Second, TPC views and component logs provide data for diagnosis. Third, operators and agents can use the same Grafana data through different access paths. Operators use Grafana directly. Agents use the IHEP MCP gateway. The main update is not one dashboard. It is the workflow from a monitoring signal to an operator action.
+
+## Slide 19 — Questions · 0:10
+
+That is the end of my report. Thank you. I am ready to take questions.
