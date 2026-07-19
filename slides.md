@@ -13,16 +13,20 @@ titleTemplate: '%s - Xiao Han'
 
 <!-- transition: slide-up -->
 
-<img src="/images/juno_logo_transparent.png" class="absolute right-16 top-14 w-28 opacity-80" />
+<img src="/images/juno_logo_transparent.png" class="absolute right-16 top-4 w-28 opacity-80" />
 
-# From dashboards to diagnosis
 
 ## Monitoring upgrades for the JUNO DCI
+#### AI Workflow of monitoring building
+<br>
 
 **Xiao Han** on behalf of the DCI Group<br/>
 <a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
 
-**28th JUNO Collaboration Meeting · 20 July 2026 · Beijing IHEP**
+
+<br>
+
+**28th JUNO Collaboration Meeting** · 20 July 2026 · *IHEP Beijing*
 
 <a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-github /> Slides</a>
  · <a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-view-dashboard-outline /> DCI Grafana</a>
@@ -42,12 +46,17 @@ align: c
 
 :: title ::
 
-# The upgrade is a shorter path from signal to action
+# Overview
 
 :: content ::
 
-<div class="lead text-center mt-3">
+<!-- <div class="lead text-center mt-3"> -->
 Monitoring is becoming an <strong>operational system</strong>, not only a collection of dashboards.
+It plays a crucial role in the JUNO Re-production process, enabling rapid alarm, rapid location, and rapid recovery.
+<!-- </div> -->
+
+<div class="takeaway mt-6">
+<strong> Huge upgrade</strong>: Dashboard save as json; MCP for grafana; Centralized component logs
 </div>
 
 <div class="three-cards mt-8">
@@ -63,14 +72,11 @@ Monitoring is becoming an <strong>operational system</strong>, not only a collec
   </div>
   <div class="story-card">
     <mdi-robot-outline class="story-icon" />
-    <h2>Accessible</h2>
-    <p>Operators use Grafana directly; agents reach the same evidence through the controlled IHEP MCP gateway.</p>
+    <h2>AI Workflow</h2>
+    <p>AI agents reach the monitoring data through the controlled IHEP MCP gateway, build dashboard with json by git repo directly</p>
   </div>
 </div>
 
-<div class="takeaway mt-6">
-<strong>Goal:</strong> reduce the time between “something is wrong” and “this is the next useful action.”
-</div>
 
 
 <!--
@@ -153,36 +159,38 @@ align: c-l-l
 
 :: title ::
 
-# Provisioning moves the control point into Git
+# Dashboards moved to Git repository
 
 :: left ::
 
 ## Before · instance state
 
-```mermaid {scale: 0.46}
+```mermaid {scale: 0.66}
 flowchart TD
-    A[Edit in Grafana UI] --> B[State in running instance]
-    B --> C[Manual backup]
-    C --> D[Recovery after change]
+    A[Grafana instance] --> B[Dashboard edited in UI]
+    B --> C[State stored in Grafana]
+    C --> D[Manual backup when needed]
 ```
 
-The running service was the main source of truth. A backup could recover state, but it did not make each change easy to review, reproduce, or transfer.
+<div class="takeaway compact mt-5">
+    Dashboard data stored in grafana.db. It did not make each change easy to review, reproduce, or transfer.
+</div>
 
 :: right ::
 
 ## Now · delivery path
 
-```mermaid {scale: 0.46}
+```mermaid {scale: 0.66}
 flowchart TD
-    A[Dashboard JSON] --> B[Git diff and review]
-    B --> C[Provisioning provider]
+    A[Edit in Grafana UI] --> E
+    E[Export JSON from Grafana] --> B 
+    F[Edit JSON directly] --> B
+    B[Git diff and review] --> C[Provisioning provider]
     C --> D[Grafana instance]
 ```
 
-The repository becomes the durable definition of the monitoring layout. The instance reconciles that definition on deployment and during provider refresh.
-
 <div class="takeaway compact mt-5">
-Backup protects the past. Provisioning controls the next change.
+Each dashboard stored in git repository in JSON.
 </div>
 
 
@@ -199,7 +207,7 @@ align: c
 
 :: title ::
 
-# The repository is now an operational control surface
+# Dashboards moved to Git repository
 
 :: content ::
 
@@ -233,76 +241,52 @@ Timing: 1:10
 The repository now contains 31 dashboard files under five providers: Admin, DIRAC, TPC, User, and Shift. The delivery loop is create, capture, control, and reconcile. An operator or an agent can compose a dashboard, but the result must return as dashboard JSON. Git is the review boundary, and Grafana refreshes the provider every 30 seconds. One guardrail deserves attention: UI updates are still allowed for convenience. Therefore, an edit made in Grafana must be exported, reviewed, and committed. Otherwise, the running instance can drift away from the repository. Git remains the durable source of truth.
 -->
 ---
-layout: top-title
+layout: top-title-two-cols
 color: gray-light
-align: c
+align: c-l-l
 ---
 
 :: title ::
 
-# TPC transfer matrix: failures become patterns
+# Panel configuration details
 
-:: content ::
+:: left ::
 
-<div class="dashboard-frame tpc-dashboard-frame">
-  <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"
-    scrolling="yes"
-    class="tpc-dashboard-iframe"
-  ></iframe>
-</div>
+### 1. Register a provisioning provider
 
-<div class="dashboard-footer mt-3">
-  <span><strong>Interactive live view</strong> · scroll vertically to compare pull, push, streamed, and all modes.</span>
-  <a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new /> Open full dashboard</a>
-</div>
+```yaml
+# grafana/provisioning/dashboards/dashboards.yaml
+apiVersion: 1
 
-
-<!--
-Timing: 1:20
-
-This is the live TPC transfer monitoring dashboard. It may take a moment to load. At the top, we can filter by time interval, source site, destination site, success state, and copy mode. The dashboard contains 12 panels: eight tables and four state timelines, covering pull, push, streamed, and combined modes.
-
-[Demo: scroll vertically through the matrix and compare at least two copy modes.]
-
-The value of the matrix is correlation. A single failed transfer is only an event. A repeated row, column, or mode pattern suggests that the problem follows a site, a direction, or a transfer method. The average panels also help distinguish a transient failure from persistent degradation. This turns many individual test records into a compact operational signal.
--->
----
-layout: top-title
-color: green-light
-align: c
----
-
-:: title ::
-
-# AI assistance belongs inside the review loop
-
-:: content ::
-
-```mermaid {scale: 0.65}
-flowchart LR
-    A[Operator defines<br/>semantics and thresholds] --> B[Agent composes<br/>dashboard JSON]
-    B --> C[Build, diff<br/>and review]
-    C --> D[Provision to<br/>Grafana]
-    D --> E[Operator verifies<br/>the operational view]
-    E -. feedback .-> A
+providers:
+  - name: tpc
+    orgId: 1
+    folder: TPC
+    type: file
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/tpc
+...
 ```
 
-<div class="two-notes mt-8">
-  <div><strong>Good use of automation</strong><br/>Repeat panel structure, queries, transformations, variables, and layout consistently across a test matrix.</div>
-  <div><strong>Human control remains explicit</strong><br/>Domain meaning, grading thresholds, acceptance, and operational action stay with the operator.</div>
-</div>
+:: right ::
 
-<div class="takeaway mt-8">
-The benefit is not “AI made a dashboard.” It is <strong>faster composition with a normal Git review boundary</strong>.
-</div>
+### 2. Mount the repository into Grafana
 
+```yaml
+# docker-compose.yml
+services:
+  grafana-server:
+    volumes:
+      - /home/docker/grafana/provisioning:
+          /etc/grafana/provisioning
+    environment:
+      - GF_RENDERING_SERVER_URL=
+          http://grafana-renderer:8081/render
+```
 
-<!--
-Timing: 0:55
-
-The TPC dashboard also demonstrates where AI assistance is useful. The operator defines the semantics, the transfer modes, the thresholds, and what the colors mean. The agent can then handle repetitive dashboard composition: panel structure, queries, transformations, variables, and layout. The output is built, diffed, and reviewed before provisioning. Finally, the operator verifies the operational view. So the important result is not that AI made a dashboard. The result is faster composition while preserving a normal Git review boundary and explicit human control.
--->
+### 3. Export all of dashboards from Grafana.db
 ---
 layout: section
 color: purple-light
@@ -492,6 +476,12 @@ This is the live Component Logs dashboard. It loads more slowly than the TPC das
 The first panel shows the distribution of information, warning, and error messages. The second shows how the volume changes over time. The third exposes individual records. A practical investigation starts broad and then narrows: first identify an abnormal error mix, then select the time window, and finally inspect the responsible message. Category, Name, and Level filters keep the same context across all three views.
 -->
 ---
+layout: section
+color: orange-light
+---
+
+# 4 · AI Workflow
+---
 layout: top-title
 color: green-light
 align: c
@@ -499,37 +489,69 @@ align: c
 
 :: title ::
 
-# The operational loop is now connected
+# AI assistance for entire process of monitoring
 
 :: content ::
 
-```mermaid {scale: 0.66}
+```mermaid {scale: 0.65}
 flowchart LR
-    S[TPC or service symptom] --> V[Grafana operational view]
-    V --> E[Query metrics and logs]
-    E --> D[Evidence-based diagnosis]
-    D --> A[Operator action]
-    A -. learning .-> C[Dashboard / alert as code]
-    C -. provision .-> V
-    M[MCP agent] -. gather and explain .-> E
+    A[Operator defines<br/>semantics and thresholds] -. Call .-> B[AI Agent<br/>Hermes, OpenCode]
+    B --> F[LLM composes<br/>dashboard JSON]
+    F --> C[Build, diff<br/>and review]
+    C --> D[Provision to<br/>Grafana]
+    D --> E[Verify changes<br/>via MCP server]
+    E -. feedback .-> B
+    B -. finish .-> A
 ```
 
-<div class="role-grid mt-9">
-  <div><strong>Grafana</strong><span>makes the pattern visible</span></div>
-  <div><strong>Metrics + logs</strong><span>provide complementary evidence</span></div>
-  <div><strong>MCP agent</strong><span>shortens evidence gathering</span></div>
-  <div><strong>Operator</strong><span>owns judgment and action</span></div>
+<div class="two-notes mt-8">
+  <div><strong>Good use of automation</strong><br/>Repeat panel structure, queries, transformations, variables, and layout consistently across a test matrix.</div> <div><strong>Human control remains explicit</strong><br/>Domain meaning, grading thresholds, acceptance, and operational action stay with the operator.</div>
 </div>
 
 <div class="takeaway mt-8">
-The architecture connects observation to diagnosis while keeping change review and operational authority explicit.
+The benefit is not “AI made a dashboard.” It is <strong>AI can be involved in the entire process of monitoring systems.</strong>.
 </div>
 
 
 <!--
-Timing: 1:00
+Timing: 0:55
 
-These upgrades now form one connected loop. A TPC or service symptom appears in Grafana. We query the relevant metrics and logs, build an evidence-based diagnosis, and leave the operational action with the operator. The MCP agent can shorten evidence gathering and explanation, but it does not remove human judgment. After the incident, the learning can return to the system as a better dashboard or alert definition. Because that definition is code, it passes through review and provisioning before becoming part of the next operational view.
+The TPC dashboard also demonstrates where AI assistance is useful. The operator defines the semantics, the transfer modes, the thresholds, and what the colors mean. The agent can then handle repetitive dashboard composition: panel structure, queries, transformations, variables, and layout. The output is built, diffed, and reviewed before provisioning. Finally, the operator verifies the operational view. So the important result is not that AI made a dashboard. The result is faster composition while preserving a normal Git review boundary and explicit human control.
+-->
+---
+layout: top-title
+color: gray-light
+align: c
+---
+
+:: title ::
+
+# TPC transfer matrix
+
+:: content ::
+
+<div class="dashboard-frame tpc-dashboard-frame">
+  <iframe
+    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"
+    scrolling="yes"
+    class="tpc-dashboard-iframe"
+  ></iframe>
+</div>
+
+<div class="dashboard-footer mt-3">
+  <span>Base on <strong>Dzakhoev Albert's work</strong>, AI improved the matrix sorting and added Average success rate panels.</span>
+  <!-- <a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new /> Open full dashboard</a> -->
+</div>
+
+
+<!--
+Timing: 1:20
+
+This is the live TPC transfer monitoring dashboard. It may take a moment to load. At the top, we can filter by time interval, source site, destination site, success state, and copy mode. The dashboard contains 12 panels: eight tables and four state timelines, covering pull, push, streamed, and combined modes.
+
+[Demo: scroll vertically through the matrix and compare at least two copy modes.]
+
+The value of the matrix is correlation. A single failed transfer is only an event. A repeated row, column, or mode pattern suggests that the problem follows a site, a direction, or a transfer method. The average panels also help distinguish a transient failure from persistent degradation. This turns many individual test records into a compact operational signal.
 -->
 ---
 layout: top-title-two-cols
@@ -605,9 +627,8 @@ loop: true
 title: Questions
 ---
 
-# Questions?
 
-## Thank you
+## Thank you. Questions?
 
 **Xiao Han · IHEP, CC**<br/>
 DCI Group · JUNO Collaboration
