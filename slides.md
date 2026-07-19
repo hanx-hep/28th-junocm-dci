@@ -7,7 +7,7 @@ theme: neversink
 lineNumbers: true
 favicon: /images/juno_logo_transparent.png
 download: './28th-junocm-dci.pdf'
-title: JUNO DCI monitoring — from dashboards to diagnosis
+title: Monitoring upgrades for the JUNO DCI
 titleTemplate: '%s - Xiao Han'
 ---
 
@@ -17,7 +17,7 @@ titleTemplate: '%s - Xiao Han'
 
 
 ## Monitoring upgrades for the JUNO DCI
-#### AI workflow for building monitoring systems
+#### AI workflow for monitoring systems
 <br>
 
 **Xiao Han** on behalf of the DCI Group<br/>
@@ -68,12 +68,12 @@ It supports JUNO DCI data processing through alerts, fault localization, and rec
   <div class="story-card">
     <mdi-layers-search class="story-icon" />
     <h2>Diagnosable</h2>
-    <p>Metrics show the symptom; centralized component logs provide the event-level context behind it.</p>
+    <p>Metrics show the problem; centralized component logs provide the event-level context behind it.</p>
   </div>
   <div class="story-card">
     <mdi-robot-outline class="story-icon" />
     <h2>Accessible</h2>
-    <p>AI agents access monitoring data through the IHEP MCP gateway and create dashboard JSON directly in the Git repository.</p>
+    <p>AI agents access monitoring data through the IHEP MCP gateway.</p>
   </div>
 </div>
 
@@ -263,6 +263,8 @@ align: c
 # Central logs close the context gap
 
 :: content ::
+
+JUNO DIRAC runs more than **60** components, each producing its **own logs** , which are stored and **rotated on local disks**.
 
 ```mermaid {scale: 0.70}
 flowchart LR
