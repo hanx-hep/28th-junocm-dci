@@ -17,7 +17,7 @@ titleTemplate: '%s - Xiao Han'
 
 
 ## Monitoring upgrades for the JUNO DCI
-#### AI Workflow of monitoring building
+#### AI workflow for building monitoring systems
 <br>
 
 **Xiao Han** on behalf of the DCI Group<br/>
@@ -26,7 +26,7 @@ titleTemplate: '%s - Xiao Han'
 
 <br>
 
-**28th JUNO Collaboration Meeting** · 20 July 2026 · *IHEP Beijing*
+**28th JUNO Collaboration Meeting** · 20 July 2026 · *IHEP, Beijing*
 
 <a href="https://github.com/hanx-hep/28th-junocm-dci" class="ns-c-iconlink"><mdi-github /> Slides</a>
  · <a href="https://dci-grafana.ihep.ac.cn/" class="ns-c-iconlink"><mdi-view-dashboard-outline /> DCI Grafana</a>
@@ -52,11 +52,11 @@ align: c
 
 <!-- <div class="lead text-center mt-3"> -->
 Monitoring is becoming an <strong>operational system</strong>, not only a collection of dashboards.
-It plays a crucial role in the JUNO Re-production process, enabling rapid alarm, rapid location, and rapid recovery.
+It supports JUNO data reprocessing through alerts, fault localization, and recovery.
 <!-- </div> -->
 
 <div class="takeaway mt-6">
-<strong> Huge upgrade</strong>: Dashboard save as json; MCP for grafana; Centralized component logs
+<strong>Three updates</strong>: dashboard JSON in Git; MCP access to Grafana; centralized component logs
 </div>
 
 <div class="three-cards mt-8">
@@ -72,8 +72,8 @@ It plays a crucial role in the JUNO Re-production process, enabling rapid alarm,
   </div>
   <div class="story-card">
     <mdi-robot-outline class="story-icon" />
-    <h2>AI Workflow</h2>
-    <p>AI agents reach the monitoring data through the controlled IHEP MCP gateway, build dashboard with json by git repo directly</p>
+    <h2>AI workflow</h2>
+    <p>AI agents access monitoring data through the IHEP MCP gateway and create dashboard JSON directly in the Git repository.</p>
   </div>
 </div>
 
@@ -82,7 +82,7 @@ It plays a crucial role in the JUNO Re-production process, enabling rapid alarm,
 <!--
 Timing: 0:55
 
-The main message is shown on this slide. Monitoring is becoming an operational system rather than a collection of independent dashboards. We are improving three properties. First, it is reproducible: dashboard definitions and provisioning are kept in Git. Second, it is diagnosable: metrics show the symptom, while centralized logs explain the events behind it. Third, it is accessible: operators use Grafana directly, and agents can reach the same evidence through the controlled IHEP MCP gateway. The goal is simple—to shorten the time between noticing that something is wrong and knowing the next useful action.
+Monitoring is becoming an operational system rather than a collection of independent dashboards. This work has three parts. First, dashboard definitions and provisioning are stored in Git. Second, metrics show symptoms, while centralized logs provide event context. Third, AI agents access monitoring data through the IHEP MCP gateway and create dashboard JSON in the Git repository. Together, these parts support alerts, fault localization, and recovery in JUNO data reprocessing.
 -->
 ---
 layout: top-title
@@ -159,7 +159,7 @@ align: c-l-l
 
 :: title ::
 
-# Dashboards moved to Git repository
+# Dashboards are stored in a Git repository
 
 :: left ::
 
@@ -173,7 +173,7 @@ flowchart TD
 ```
 
 <div class="takeaway compact mt-5">
-    Dashboard data stored in grafana.db. It did not make each change easy to review, reproduce, or transfer.
+    Dashboard data were stored in grafana.db, making individual changes difficult to review, reproduce, or transfer.
 </div>
 
 :: right ::
@@ -190,7 +190,7 @@ flowchart TD
 ```
 
 <div class="takeaway compact mt-5">
-Each dashboard stored in git repository in JSON.
+Each dashboard is stored as JSON in the Git repository.
 </div>
 
 
@@ -207,7 +207,7 @@ align: c
 
 :: title ::
 
-# Dashboards moved to Git repository
+# Dashboards are stored in a Git repository
 
 :: content ::
 
@@ -286,7 +286,7 @@ services:
           http://grafana-renderer:8081/render
 ```
 
-### 3. Export all of dashboards from Grafana.db
+### 3. Export all dashboards from grafana.db
 ---
 layout: section
 color: purple-light
@@ -480,7 +480,7 @@ layout: section
 color: orange-light
 ---
 
-# 4 · AI Workflow
+# 4 · AI workflow
 ---
 layout: top-title
 color: green-light
@@ -489,34 +489,34 @@ align: c
 
 :: title ::
 
-# AI assistance for entire process of monitoring
+# AI assistance throughout the monitoring workflow
 
 :: content ::
 
 ```mermaid {scale: 0.65}
 flowchart LR
-    A[Operator defines<br/>semantics and thresholds] -. Call .-> B[AI Agent<br/>Hermes, OpenCode]
+    A[Operator defines<br/>semantics and thresholds] -. request .-> B[AI agent<br/>Hermes, OpenCode]
     B --> F[LLM composes<br/>dashboard JSON]
     F --> C[Build, diff<br/>and review]
     C --> D[Provision to<br/>Grafana]
-    D --> E[Verify changes<br/>via MCP server]
+    D --> E[Verify changes<br/>through the MCP server]
     E -. feedback .-> B
-    B -. finish .-> A
+    B -. result .-> A
 ```
 
 <div class="two-notes mt-8">
-  <div><strong>Good use of automation</strong><br/>Repeat panel structure, queries, transformations, variables, and layout consistently across a test matrix.</div> <div><strong>Human control remains explicit</strong><br/>Domain meaning, grading thresholds, acceptance, and operational action stay with the operator.</div>
+  <div><strong>Automation</strong><br/>The agent repeats panel structures, queries, transformations, variables, and layouts across a test matrix.</div> <div><strong>Human control</strong><br/>The operator defines domain meaning and grading thresholds, approves the result, and selects operational actions.</div>
 </div>
 
 <div class="takeaway mt-8">
-The benefit is not “AI made a dashboard.” It is <strong>AI can be involved in the entire process of monitoring systems.</strong>.
+The result is not only a dashboard generated by AI. <strong>AI can support each stage of the monitoring workflow.</strong>
 </div>
 
 
 <!--
 Timing: 0:55
 
-The TPC dashboard also demonstrates where AI assistance is useful. The operator defines the semantics, the transfer modes, the thresholds, and what the colors mean. The agent can then handle repetitive dashboard composition: panel structure, queries, transformations, variables, and layout. The output is built, diffed, and reviewed before provisioning. Finally, the operator verifies the operational view. So the important result is not that AI made a dashboard. The result is faster composition while preserving a normal Git review boundary and explicit human control.
+This workflow shows how AI can support monitoring development. The operator defines the semantics, transfer modes, thresholds, and color meanings. The agent composes the dashboard JSON and repeats panel structures, queries, transformations, variables, and layouts. The result is built, reviewed as a Git diff, and provisioned to Grafana. The agent verifies the changes through the MCP server, and the operator reviews the result. AI can support each stage while the operator retains control of meaning, approval, and actions.
 -->
 ---
 layout: top-title
@@ -539,7 +539,7 @@ align: c
 </div>
 
 <div class="dashboard-footer mt-3">
-  <span>Base on <strong>Dzakhoev Albert's work</strong>, AI improved the matrix sorting and added Average success rate panels.</span>
+  <span>Based on <strong>Albert Dzakhoev's work</strong>, AI was used to improve matrix sorting and add panels showing the average success rate.</span>
   <!-- <a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-7d&to=now&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new /> Open full dashboard</a> -->
 </div>
 
