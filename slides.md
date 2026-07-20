@@ -20,9 +20,7 @@ titleTemplate: '%s - Xiao Han'
 #### AI workflow for monitoring systems
 <br>
 
-**Xiao Han** on behalf of the DCI Group<br/>
-<a href="mailto:hanx@ihep.ac.cn"><Email v="hanx@ihep.ac.cn" /></a>
-
+**Xiao Han** on behalf of the DCI Group · <a href="mailto:hanx@ihep.ac.cn">hanx@ihep.ac.cn</a>
 
 <br>
 
@@ -40,7 +38,7 @@ Good afternoon. I am Xiao Han, and I am speaking on behalf of the DCI Group. Tod
 -->
 ---
 layout: top-title
-color: gray-light
+color: orange-light
 align: c
 ---
 
@@ -99,7 +97,7 @@ I will start with dashboard configuration. The goal is to store dashboard defini
 -->
 ---
 layout: top-title-two-cols
-color: gray-light
+color: cyan-light
 align: c-l-l
 ---
 
@@ -147,7 +145,7 @@ The left side shows the old method. We edited a dashboard in the Grafana UI. Gra
 -->
 ---
 layout: top-title
-color: gray-light
+color: cyan-light
 align: c
 ---
 
@@ -188,7 +186,7 @@ The repository now has 31 dashboard files. They are grouped under five providers
 -->
 ---
 layout: top-title-two-cols
-color: gray-light
+color: cyan-light
 align: c-l-l
 ---
 
@@ -232,6 +230,8 @@ services:
           http://grafana-renderer:8081/render
 ```
 
+<br/>
+
 ### 3. Export all dashboards from grafana.db
 
 <!--
@@ -254,7 +254,7 @@ The third part is component logs. Metrics show that a service changed. Logs help
 -->
 ---
 layout: top-title-two-cols
-color: gray-light
+color: lime-light
 align: c-lt-lt
 ---
 
@@ -309,7 +309,7 @@ JUNO DIRAC runs more than 60 components. By default, each component writes logs 
 -->
 ---
 layout: top-title-two-cols
-color: gray-light
+color: lime-light
 align: c-l-l
 ---
 
@@ -331,14 +331,14 @@ align: c-l-l
 
 <div class="dashboard-frame component-dashboard-frame">
   <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-24h&to=now&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"
+    src="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-70d&to=now-69d&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"
     scrolling="yes"
     class="component-dashboard-iframe"
   ></iframe>
 </div>
 
 <div class="text-center mt-3">
-  <a href="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-14d&to=now-12d&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&kiosk"><mdi-open-in-new /> Open full dashboard</a>
+  <a href="https://dci-grafana.ihep.ac.cn/d/bfgu666p30xdsb/component-logs?orgId=1&from=now-70d&to=now-69d&timezone=browser&var-Category=$__all&var-Name=$__all&var-Level=$__all&kiosk"><mdi-open-in-new /> Open full dashboard</a>
 </div>
 
 
@@ -366,7 +366,7 @@ The second part is MCP access. An agent can use monitoring data, but it must pas
 -->
 ---
 layout: top-title
-color: gray-light
+color: purple-light
 align: c
 ---
 
@@ -409,7 +409,7 @@ The client does not connect to Grafana directly. It sends an MCP request to mcp.
 -->
 ---
 layout: top-title
-color: gray-light
+color: purple-light
 align: c
 ---
 
@@ -459,7 +459,7 @@ The last part shows how an AI agent can support the dashboard workflow from crea
 -->
 ---
 layout: top-title
-color: green-light
+color: orange-light
 align: c
 ---
 
@@ -496,7 +496,7 @@ The operator starts by defining the meaning of the dashboard and its thresholds.
 -->
 ---
 layout: top-title
-color: gray-light
+color: orange-light
 align: c
 ---
 
@@ -508,7 +508,7 @@ align: c
 
 <div class="dashboard-frame tpc-dashboard-frame">
   <iframe
-    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-14d&to=now-12d&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&refresh=1d&kiosk"
+    src="https://dci-grafana.ihep.ac.cn/d/tpc-transfer-monitoring/tpc-transfer-monitoring?var-timeInterval=1d&orgId=1&from=now-14d&to=now-13d&timezone=browser&var-srcsite=$__all&var-dessite=$__all&var-success=$__all&var-copymode=$__all&refresh=1d&kiosk"
     scrolling="yes"
     class="tpc-dashboard-iframe"
   ></iframe>
@@ -531,7 +531,7 @@ A single failed transfer is one event. A repeated row or column can point to a s
 -->
 ---
 layout: top-title-two-cols
-color: gray-light
+color: orange-light
 align: c-l-l
 ---
 
@@ -545,7 +545,6 @@ align: c-l-l
 
 <div class="status-stack">
   <div><mdi-check-circle-outline /><span><strong>Dashboard provisioning</strong><br/>31 JSON dashboards under five providers</span></div>
-  <div><mdi-check-circle-outline /><span><strong>TPC transfer view</strong><br/>12 panels across four transfer modes</span></div>
   <div><mdi-check-circle-outline /><span><strong>Controlled MCP path</strong><br/>Central gateway to <code>mcp-grafana</code></span></div>
   <div><mdi-check-circle-outline /><span><strong>Central component logs</strong><br/>Three complementary diagnostic panels</span></div>
 </div>
@@ -558,7 +557,7 @@ align: c-l-l
   <div><mdi-arrow-right-circle-outline /><span><strong>Actionable alerts</strong><br/>Thresholds, ownership, and response links</span></div>
   <div><mdi-arrow-right-circle-outline /><span><strong>Dashboard release checks</strong><br/>Build, schema, and screenshot smoke tests</span></div>
   <div><mdi-arrow-right-circle-outline /><span><strong>Scoped MCP operations</strong><br/>Read-first tools with explicit authorization</span></div>
-  <div><mdi-arrow-right-circle-outline /><span><strong>Metrics-to-logs drill-down</strong><br/>Carry site, component, and time context</span></div>
+  <div><mdi-arrow-right-circle-outline /><span><strong>Upgrade SAM Test</strong><br/>Both probing and monitoring</span></div>
 </div>
 
 
@@ -569,7 +568,7 @@ The left side lists the work that is available now. We have 31 provisioned dashb
 -->
 ---
 layout: top-title
-color: green-light
+color: orange-light
 align: c
 ---
 
